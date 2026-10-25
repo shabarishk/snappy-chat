@@ -40,6 +40,11 @@ function addMessage(role, content = "") {
   return text;
 }
 
+function renderAssistantMarkdown(element, markdown) {
+  const html = window.marked.parse(markdown, { gfm: true });
+  element.innerHTML = window.DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
+}
+
 function setGenerating(generating) {
   isGenerating = generating;
   sendButton.innerHTML = generating ? "<span aria-hidden=\"true\">■</span>" : "<span aria-hidden=\"true\">↑</span>";
@@ -76,7 +81,7 @@ async function loadModels() {
   updateSendButton();
 }
 
-function handleStreamLine(line, assistantText) {
+function handleStreamLine(line, assistantMessage, assistantText) {
   if (!line.trim()) return;
   let data;
   try {
@@ -88,7 +93,8 @@ function handleStreamLine(line, assistantText) {
     throw new Error(data.error);
   }
   if (typeof data.message?.content === "string") {
-    assistantText.textContent += data.message.content;
+    assistantMessage.content += data.message.content;
+    renderAssistantMarkdown(assistantText, assistantMessage.content);
     assistantText.parentElement.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
 }
@@ -133,15 +139,14 @@ async function sendMessage(content) {
       const lines = pending.split("\n");
       pending = lines.pop();
       for (const line of lines) {
-        handleStreamLine(line, assistantText);
+        handleStreamLine(line, assistantMessage, assistantText);
       }
       if (done) break;
     }
-    handleStreamLine(pending, assistantText);
-    assistantMessage.content = assistantText.textContent;
+    handleStreamLine(pending, assistantMessage, assistantText);
   } catch (error) {
     if (error.name === "AbortError") {
-      assistantMessage.content = assistantText.textContent;
+      renderAssistantMarkdown(assistantText, assistantMessage.content);
     } else {
       assistantText.textContent = error.message;
       assistantText.parentElement.classList.add("error");

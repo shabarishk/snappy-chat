@@ -372,13 +372,138 @@ h1 {
   font-size: 13px;
   line-height: 1.75;
   overflow-wrap: anywhere;
-  white-space: pre-wrap;
 }
 
 .message.user .message-content {
   padding: 8px 12px;
   border-radius: 4px 10px 10px;
   background: #efefeb;
+  white-space: pre-wrap;
+}
+
+.message-content > :first-child {
+  margin-top: 0;
+}
+
+.message-content > :last-child {
+  margin-bottom: 0;
+}
+
+.message-content p,
+.message-content ul,
+.message-content ol,
+.message-content blockquote,
+.message-content pre,
+.message-content table {
+  margin: 0 0 12px;
+}
+
+.message-content h1,
+.message-content h2,
+.message-content h3,
+.message-content h4,
+.message-content h5,
+.message-content h6 {
+  margin: 18px 0 8px;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.35px;
+  line-height: 1.35;
+}
+
+.message-content h1 {
+  font-size: 21px;
+}
+
+.message-content h2 {
+  font-size: 18px;
+}
+
+.message-content h3,
+.message-content h4,
+.message-content h5,
+.message-content h6 {
+  font-size: 15px;
+}
+
+.message-content ul,
+.message-content ol {
+  padding-left: 23px;
+}
+
+.message-content li + li {
+  margin-top: 4px;
+}
+
+.message-content blockquote {
+  padding: 2px 0 2px 13px;
+  border-left: 3px solid #cbd5c6;
+  color: #72776e;
+}
+
+.message-content :not(pre) > code {
+  padding: 2px 5px;
+  border: 1px solid #e8e9e5;
+  border-radius: 5px;
+  background: #f1f2ef;
+  color: #4a5547;
+  font-family: Consolas, "SFMono-Regular", monospace;
+  font-size: 0.9em;
+}
+
+.message-content pre {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 13px 15px;
+  border: 1px solid #e6e8e2;
+  border-radius: 8px;
+  background: #f1f2ef;
+  line-height: 1.6;
+  tab-size: 2;
+}
+
+.message-content pre code {
+  color: #343832;
+  font-family: Consolas, "SFMono-Regular", monospace;
+  font-size: 12px;
+  white-space: pre;
+}
+
+.message-content a {
+  color: #486a48;
+  text-decoration: underline;
+  text-decoration-color: #b9c7b5;
+  text-underline-offset: 2px;
+}
+
+.message-content a:hover {
+  color: #304b30;
+}
+
+.message-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.message-content th,
+.message-content td {
+  padding: 7px 10px;
+  border: 1px solid #e2e5de;
+  text-align: left;
+}
+
+.message-content th {
+  background: #f1f2ef;
+  font-weight: 700;
+}
+
+.message-content hr {
+  margin: 16px 0;
+  border: 0;
+  border-top: 1px solid #e6e8e2;
 }
 
 .message.error .message-content {

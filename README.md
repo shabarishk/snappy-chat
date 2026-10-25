@@ -21,6 +21,9 @@ docker compose up --build -d
 
 Open `http://<unraid-ip>:3000`.
 
+Assistant replies render GitHub-flavored Markdown, including headings, lists,
+links, tables, and code blocks. Rendered HTML is sanitized in the browser.
+
 ## Unraid container settings
 
 The template is in `unraid/snappy-chat.xml`. Add it to Unraid's container

@@ -4,6 +4,10 @@ const path = require("node:path");
 
 const port = Number(process.env.PORT || 3000);
 const publicDirectory = path.join(__dirname, "public");
+const vendorFiles = new Map([
+  ["/vendor/marked.umd.js", path.join(__dirname, "node_modules", "marked", "lib", "marked.umd.js")],
+  ["/vendor/purify.min.js", path.join(__dirname, "node_modules", "dompurify", "dist", "purify.min.js")],
+]);
 const configuredOllamaUrl = process.env.OLLAMA_BASE_URL || "http://192.168.1.100:11434";
 
 let ollamaBaseUrl;
@@ -195,17 +199,20 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
-  let requestedPath;
-  try {
-    requestedPath = url.pathname === "/" ? "index.html" : decodeURIComponent(url.pathname.slice(1));
-  } catch {
-    sendJson(response, 400, { error: "Invalid page path." });
-    return;
-  }
-  const filePath = path.resolve(publicDirectory, requestedPath);
-  if (!filePath.startsWith(`${publicDirectory}${path.sep}`) && filePath !== path.join(publicDirectory, "index.html")) {
-    sendJson(response, 404, { error: "Not found." });
-    return;
+  let filePath = vendorFiles.get(url.pathname);
+  if (!filePath) {
+    let requestedPath;
+    try {
+      requestedPath = url.pathname === "/" ? "index.html" : decodeURIComponent(url.pathname.slice(1));
+    } catch {
+      sendJson(response, 400, { error: "Invalid page path." });
+      return;
+    }
+    filePath = path.resolve(publicDirectory, requestedPath);
+    if (!filePath.startsWith(`${publicDirectory}${path.sep}`) && filePath !== path.join(publicDirectory, "index.html")) {
+      sendJson(response, 404, { error: "Not found." });
+      return;
+    }
   }
 
   fs.readFile(filePath, (error, contents) => {
