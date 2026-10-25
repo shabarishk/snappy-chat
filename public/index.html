@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f7f7f5">
+    <title>Snappy Chat</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Chat sidebar">
+        <a class="brand" href="/" aria-label="Snappy Chat home">
+          <span class="brand-mark" aria-hidden="true">s</span>
+          <span>snappy<span class="brand-light">chat</span></span>
+        </a>
+        <button class="new-chat-button" id="new-chat" type="button">
+          <span aria-hidden="true">+</span>
+          New chat
+          <kbd>⌘ K</kbd>
+        </button>
+        <div class="sidebar-section">
+          <p class="section-label">YOUR SPACE</p>
+          <p class="empty-history">Your conversations will show up here.</p>
+        </div>
+        <div class="sidebar-footer">
+          <span class="connection-dot" id="connection-dot" aria-hidden="true"></span>
+          <span id="connection-label">Connecting to Ollama…</span>
+        </div>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <div class="mobile-brand">
+            <span class="brand-mark" aria-hidden="true">s</span>
+            <span>snappy<span class="brand-light">chat</span></span>
+          </div>
+          <div class="model-control">
+            <span class="model-label">MODEL</span>
+            <select id="model-select" aria-label="Choose a model" disabled>
+              <option>Loading models…</option>
+            </select>
+          </div>
+          <span class="local-badge"><span aria-hidden="true">●</span> LOCAL</span>
+        </header>
+
+        <section class="conversation" aria-label="Conversation" aria-live="polite">
+          <div class="welcome" id="welcome">
+            <div class="welcome-icon" aria-hidden="true">✳</div>
+            <p class="eyebrow">A LITTLE SPACE TO THINK</p>
+            <h1>What’s on your mind?</h1>
+            <p class="welcome-copy">A fresh conversation with your local AI. Ask anything to get started.</p>
+            <div class="suggestions" aria-label="Suggested prompts">
+              <button type="button" data-prompt="Help me think through an idea I have.">Help me think through an idea <span aria-hidden="true">↗</span></button>
+              <button type="button" data-prompt="Explain a tricky topic in simple terms.">Explain something simply <span aria-hidden="true">↗</span></button>
+              <button type="button" data-prompt="Help me write a clear, friendly message.">Help me write something <span aria-hidden="true">↗</span></button>
+            </div>
+          </div>
+          <div class="messages" id="messages"></div>
+        </section>
+
+        <div class="composer-area">
+          <form class="composer" id="chat-form">
+            <label class="visually-hidden" for="message-input">Message</label>
+            <textarea id="message-input" rows="1" placeholder="Message your model…" autocomplete="off"></textarea>
+            <div class="composer-bottom">
+              <span class="composer-hint">Your chats stay on your network <span aria-hidden="true">·</span> <kbd>↵</kbd> to send</span>
+              <button class="send-button" id="send-button" type="submit" aria-label="Send message" disabled>
+                <span aria-hidden="true">↑</span>
+              </button>
+            </div>
+          </form>
+          <p class="disclaimer">AI can make mistakes. Check important information.</p>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

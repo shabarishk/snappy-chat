@@ -1,0 +1,9 @@
+services:
+  snappy-chat:
+    build: .
+    container_name: snappy-chat
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      OLLAMA_BASE_URL: "${OLLAMA_BASE_URL:-http://192.168.1.100:11434}"

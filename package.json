@@ -1,0 +1,12 @@
+{
+  "name": "snappy-chat",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A lightweight chat interface for Ollama",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

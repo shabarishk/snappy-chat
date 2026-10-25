@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>snappy-chat</Name>
+  <Repository>ghcr.io/shabarishk/snappy-chat:latest</Repository>
+  <Registry>https://github.com/shabarishk/snappy-chat</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/shabarishk/snappy-chat</Support>
+  <Project>https://github.com/shabarishk/snappy-chat</Project>
+  <Overview>A lightweight chat interface for Ollama running on your local network.</Overview>
+  <Category>Productivity:</Category>
+  <WebUI>http://[IP]:[PORT:3000]/</WebUI>
+  <TemplateURL/>
+  <Icon/>
+  <ExtraParams/>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText/>
+  <DonateLink/>
+  <Requires/>
+  <Config Name="Web UI" Target="3000" Default="3000" Mode="tcp" Description="Port used to access Snappy Chat." Type="Port" Display="always" Required="true" Mask="false">3000</Config>
+  <Config Name="Ollama Base URL" Target="OLLAMA_BASE_URL" Default="http://192.168.1.100:11434" Mode="" Description="Base URL of Ollama on your Mac, for example http://192.168.1.25:11434. Set a DHCP reservation for the Mac so this address stays stable." Type="Variable" Display="always" Required="true" Mask="false">http://192.168.1.100:11434</Config>
+</Container>
