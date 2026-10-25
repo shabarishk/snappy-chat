@@ -7,3 +7,11 @@ services:
       - "3000:3000"
     environment:
       OLLAMA_BASE_URL: "${OLLAMA_BASE_URL:-http://192.168.1.100:11434}"
+      POSTGRES_HOST: "${POSTGRES_HOST:?Set POSTGRES_HOST to the PostgreSQL container name or address}"
+      POSTGRES_PORT: "${POSTGRES_PORT:-5432}"
+      POSTGRES_DB: "${POSTGRES_DB:?Set POSTGRES_DB to the PostgreSQL database name}"
+      POSTGRES_USER: "${POSTGRES_USER:?Set POSTGRES_USER to the PostgreSQL username}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD to the PostgreSQL password}"
+      ADMIN_USERNAME: "${ADMIN_USERNAME:?Set ADMIN_USERNAME for the initial administrator}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:?Set ADMIN_PASSWORD for the initial administrator}"
+      COOKIE_SECURE: "${COOKIE_SECURE:-false}"

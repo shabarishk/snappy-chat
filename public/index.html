@@ -11,7 +11,22 @@
     <script src="/app.js" defer></script>
   </head>
   <body>
-    <div class="app-shell">
+    <section class="auth-screen" id="login-screen" hidden>
+      <form class="auth-card" id="login-form">
+        <span class="brand-mark auth-mark" aria-hidden="true">s</span>
+        <p class="eyebrow">YOUR PRIVATE CHAT SPACE</p>
+        <h1>Welcome back</h1>
+        <p class="auth-copy">Sign in to continue to your conversations.</p>
+        <label for="login-username">Username</label>
+        <input id="login-username" name="username" type="text" autocomplete="username" required>
+        <label for="login-password">Password</label>
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+        <p class="form-error" id="login-error" role="alert" hidden></p>
+        <button class="primary-button" type="submit">Sign in</button>
+      </form>
+    </section>
+
+    <div class="app-shell" id="app-shell" hidden>
       <aside class="sidebar" aria-label="Chat sidebar">
         <a class="brand" href="/" aria-label="Snappy Chat home">
           <span class="brand-mark" aria-hidden="true">s</span>
@@ -23,17 +38,26 @@
           <kbd>⌘ K</kbd>
         </button>
         <div class="sidebar-section">
-          <p class="section-label">YOUR SPACE</p>
-          <p class="empty-history">Your conversations will show up here.</p>
+          <p class="section-label">YOUR CONVERSATIONS</p>
+          <div class="conversation-list" id="conversation-list"></div>
         </div>
-        <div class="sidebar-footer">
-          <span class="connection-dot" id="connection-dot" aria-hidden="true"></span>
-          <span id="connection-label">Connecting to Ollama…</span>
+        <div class="sidebar-account">
+          <div class="account-info">
+            <span class="account-avatar" id="account-avatar" aria-hidden="true"></span>
+            <span class="account-name" id="account-name"></span>
+          </div>
+          <button class="text-button admin-button" id="manage-users" type="button" hidden>Manage users</button>
+          <div class="sidebar-footer">
+            <span class="connection-dot" id="connection-dot" aria-hidden="true"></span>
+            <span id="connection-label">Connecting to Ollama…</span>
+          </div>
+          <button class="text-button logout-button" id="logout" type="button">Sign out</button>
         </div>
       </aside>
 
       <main class="main-panel">
         <header class="topbar">
+          <button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Show conversations">☰</button>
           <div class="mobile-brand">
             <span class="brand-mark" aria-hidden="true">s</span>
             <span>snappy<span class="brand-light">chat</span></span>
@@ -77,5 +101,29 @@
         </div>
       </main>
     </div>
+
+    <dialog class="admin-dialog" id="admin-dialog">
+      <div class="dialog-header">
+        <div>
+          <p class="eyebrow">ADMINISTRATION</p>
+          <h2>Manage users</h2>
+        </div>
+        <button class="icon-button" id="close-admin" type="button" aria-label="Close user management">×</button>
+      </div>
+      <form class="user-form" id="create-user-form">
+        <label for="new-username">Username</label>
+        <input id="new-username" name="username" type="text" minlength="3" maxlength="32" pattern="[a-zA-Z0-9_.-]+" autocomplete="off" required>
+        <label for="new-password">Account password</label>
+        <input id="new-password" name="password" type="password" minlength="12" maxlength="1024" autocomplete="new-password" required>
+        <p class="field-hint">Use 12 or more characters. Share the password securely.</p>
+        <p class="form-error" id="create-user-error" role="alert" hidden></p>
+        <button class="primary-button" type="submit">Create user</button>
+      </form>
+      <div class="users-heading">
+        <h3>Existing users</h3>
+        <span id="user-count"></span>
+      </div>
+      <ul class="users-list" id="users-list"></ul>
+    </dialog>
   </body>
 </html>

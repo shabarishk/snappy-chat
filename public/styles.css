@@ -662,3 +662,368 @@ h1 {
     padding: 0 12px 12px;
   }
 }
+
+.app-shell[hidden],
+.auth-screen[hidden] {
+  display: none;
+}
+
+.sidebar-account {
+  margin-top: auto;
+}
+
+.account-info {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+  padding: 0 7px 11px;
+}
+
+.account-avatar {
+  display: grid;
+  width: 29px;
+  height: 29px;
+  flex: 0 0 29px;
+  place-items: center;
+  border-radius: 9px;
+  background: #e9eee4;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.account-name {
+  overflow: hidden;
+  color: #555a52;
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-button {
+  padding: 5px 7px;
+  border: 0;
+  background: transparent;
+  color: #72776e;
+  cursor: pointer;
+  font-size: 11px;
+  text-align: left;
+}
+
+.text-button:hover {
+  color: var(--green-dark);
+}
+
+.admin-button {
+  margin-bottom: 5px;
+}
+
+.logout-button {
+  margin-top: 7px;
+}
+
+.conversation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.conversation-item {
+  overflow: hidden;
+  width: 100%;
+  padding: 9px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #6f736c;
+  cursor: pointer;
+  font-size: 11px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation-item:hover,
+.conversation-item.is-selected {
+  background: #eff1ec;
+  color: #41483e;
+}
+
+.sidebar-toggle {
+  display: none;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #62675f;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.auth-screen {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(233, 238, 228, 0.8), transparent 44%),
+    #f7f7f5;
+}
+
+.auth-card {
+  display: flex;
+  width: min(100%, 390px);
+  flex-direction: column;
+  padding: 34px;
+  border: 1px solid #e7e9e4;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 40px rgba(38, 46, 34, 0.06);
+}
+
+.auth-mark {
+  margin-bottom: 24px;
+}
+
+.auth-card .eyebrow {
+  margin-bottom: 8px;
+}
+
+.auth-card h1 {
+  font-size: 28px;
+}
+
+.auth-copy {
+  margin: 8px 0 24px;
+  color: #858981;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.auth-card label,
+.user-form label {
+  margin: 0 0 6px;
+  color: #62675f;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.auth-card input,
+.user-form input {
+  width: 100%;
+  height: 39px;
+  margin-bottom: 16px;
+  padding: 0 10px;
+  border: 1px solid #e2e4de;
+  border-radius: 7px;
+  outline: 0;
+  background: #fff;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.auth-card input:focus,
+.user-form input:focus {
+  border-color: #aebda8;
+  box-shadow: 0 0 0 3px rgba(83, 109, 82, 0.1);
+}
+
+.primary-button {
+  min-height: 39px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 7px;
+  background: var(--green);
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 150ms;
+}
+
+.primary-button:hover:enabled {
+  background: var(--green-dark);
+}
+
+.primary-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.form-error {
+  margin: 0 0 12px;
+  color: #b44d43;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.admin-dialog {
+  width: min(calc(100% - 32px), 480px);
+  max-height: min(85vh, 720px);
+  padding: 24px;
+  overflow-y: auto;
+  border: 1px solid #e5e8e1;
+  border-radius: 13px;
+  background: #fbfbfa;
+  color: var(--ink);
+  box-shadow: 0 22px 70px rgba(24, 29, 23, 0.2);
+}
+
+.admin-dialog::backdrop {
+  background: rgba(24, 29, 23, 0.35);
+  backdrop-filter: blur(2px);
+}
+
+.dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.dialog-header .eyebrow {
+  margin: 0 0 5px;
+}
+
+.dialog-header h2 {
+  margin: 0;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  font-size: 21px;
+  letter-spacing: -0.7px;
+}
+
+.icon-button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid #e5e7e1;
+  border-radius: 7px;
+  background: #fff;
+  color: #74796f;
+  cursor: pointer;
+  font-size: 19px;
+}
+
+.user-form {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border: 1px solid #e8eae5;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.user-form input {
+  margin-bottom: 12px;
+}
+
+.field-hint {
+  margin: -4px 0 13px;
+  color: #8b8e87;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.users-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 22px 1px 9px;
+}
+
+.users-heading h3 {
+  margin: 0;
+  color: #62675f;
+  font-size: 11px;
+}
+
+.users-heading > span {
+  color: #969990;
+  font-size: 10px;
+}
+
+.users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.user-row {
+  display: flex;
+  min-height: 39px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  border-bottom: 1px solid #eeefec;
+}
+
+.user-identity {
+  color: #484d46;
+  font-size: 12px;
+}
+
+.role-badge {
+  padding: 4px 7px;
+  border-radius: 12px;
+  background: #efefeb;
+  color: #797d74;
+  font-size: 9px;
+}
+
+.role-badge.is-admin {
+  background: #e9eee4;
+  color: var(--green-dark);
+}
+
+@media (max-width: 700px) {
+  .sidebar-toggle {
+    display: block;
+  }
+
+  .sidebar {
+    position: fixed;
+    z-index: 5;
+    inset: 0 auto 0 0;
+    display: flex;
+    width: min(82vw, 290px);
+    transform: translateX(-105%);
+    transition: transform 180ms ease;
+    box-shadow: 7px 0 24px rgba(38, 46, 34, 0.08);
+  }
+
+  .sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  .topbar {
+    justify-content: flex-start;
+    gap: 10px;
+  }
+
+  .model-control {
+    min-width: 0;
+  }
+
+  #model-select {
+    max-width: min(36vw, 150px);
+  }
+
+  .local-badge {
+    margin-left: auto;
+  }
+
+  .auth-card {
+    padding: 27px 23px;
+  }
+
+  .admin-dialog {
+    padding: 19px;
+  }
+}
