@@ -11,6 +11,10 @@ const messagesElement = document.querySelector("#messages");
 const connectionDot = document.querySelector("#connection-dot");
 const connectionLabel = document.querySelector("#connection-label");
 const newChatButton = document.querySelector("#new-chat");
+const contextDonut = document.querySelector("#context-donut");
+const contextTrigger = document.querySelector("#context-trigger");
+const contextPercent = document.querySelector("#context-percent");
+const contextTooltipUsage = document.querySelector("#context-tooltip-usage");
 const conversationList = document.querySelector("#conversation-list");
 const adminDialog = document.querySelector("#admin-dialog");
 const createUserForm = document.querySelector("#create-user-form");
@@ -23,6 +27,9 @@ let conversationId;
 let messages = [];
 let isGenerating = false;
 let activeController;
+const modelContexts = new Map();
+const messageStats = new WeakMap();
+let currentContextStats = null;
 
 function showLogin(errorMessage = "") {
   cancelGeneration();
@@ -81,7 +88,7 @@ function updateSendButton() {
   sendButton.disabled = !isGenerating && (!modelSelect.value || !messageInput.value.trim());
 }
 
-function addMessage(role, content = "") {
+function addMessage(role, content = "", stats = null) {
   const message = document.createElement("article");
   message.className = `message ${role}`;
 
@@ -94,10 +101,152 @@ function addMessage(role, content = "") {
   text.className = "message-content";
   if (role === "assistant") renderAssistantMarkdown(text, content);
   else text.textContent = content;
-  message.append(avatar, text);
+  const body = document.createElement("div");
+  body.className = "message-body";
+  body.append(text);
+  message.append(avatar, body);
+  if (role === "assistant" && stats) renderMessageStats(message, stats);
   messagesElement.append(message);
   message.scrollIntoView({ block: "nearest", behavior: "smooth" });
   return text;
+}
+
+function formatNumber(value) {
+  return new Intl.NumberFormat().format(value);
+}
+
+function formatSeconds(milliseconds) {
+  return `${(milliseconds / 1000).toFixed(2)}s`;
+}
+
+function refreshContextIndicator() {
+  const model = modelSelect.value;
+  const contextLength = modelContexts.get(model);
+  const stats = currentContextStats?.model === model ? currentContextStats : null;
+  const hasUsage = stats &&
+    Number.isFinite(stats.promptEvalCount) &&
+    Number.isFinite(stats.evalCount);
+
+  if (!contextLength) {
+    contextDonut.style.setProperty("--context-progress", "0");
+    contextDonut.classList.remove("is-warning", "is-critical");
+    contextPercent.textContent = "—";
+    contextTooltipUsage.textContent = model ? "Context capacity unavailable" : "Select a model to see its context window";
+    contextTrigger.setAttribute("aria-label", "Context capacity unavailable");
+    return;
+  }
+
+  if (!hasUsage) {
+    contextDonut.style.setProperty("--context-progress", "0");
+    contextDonut.classList.remove("is-warning", "is-critical");
+    contextPercent.textContent = "—";
+    contextTooltipUsage.textContent = `${formatNumber(contextLength)} tokens available · usage appears after a reply`;
+    contextTrigger.setAttribute("aria-label", `Context window: ${formatNumber(contextLength)} tokens; usage not available yet`);
+    return;
+  }
+
+  const usedTokens = stats.promptEvalCount + stats.evalCount;
+  const usagePercent = Math.min(100, (usedTokens / contextLength) * 100);
+  contextDonut.style.setProperty("--context-progress", String(usagePercent));
+  contextDonut.classList.toggle("is-warning", usagePercent >= 70 && usagePercent < 90);
+  contextDonut.classList.toggle("is-critical", usagePercent >= 90);
+  contextPercent.textContent = `${Math.round(usagePercent)}%`;
+  contextTooltipUsage.textContent = `~${formatNumber(usedTokens)} of ${formatNumber(contextLength)} tokens · ${usagePercent.toFixed(1)}%`;
+  contextTrigger.setAttribute(
+    "aria-label",
+    `Estimated context usage: ${formatNumber(usedTokens)} of ${formatNumber(contextLength)} tokens, ${usagePercent.toFixed(1)} percent`,
+  );
+}
+
+function renderMessageStats(messageElement, stats) {
+  messageStats.set(messageElement, stats);
+  const body = messageElement.querySelector(".message-body");
+  let statsElement = body.querySelector(".message-stats");
+  if (!statsElement) {
+    statsElement = document.createElement("div");
+    statsElement.className = "message-stats";
+    statsElement.setAttribute("aria-label", "Model performance");
+    body.append(statsElement);
+  }
+
+  const items = [];
+  if (Number.isFinite(stats.firstTokenMs)) {
+    items.push(["First token", formatSeconds(stats.firstTokenMs)]);
+  }
+  if (Number.isFinite(stats.promptEvalCount)) {
+    items.push(["Prompt", `${formatNumber(stats.promptEvalCount)} tok`]);
+  }
+  if (
+    Number.isFinite(stats.promptEvalCount) &&
+    Number.isFinite(stats.promptEvalDuration) &&
+    stats.promptEvalDuration > 0
+  ) {
+    const promptSpeed = stats.promptEvalCount / (stats.promptEvalDuration / 1_000_000_000);
+    items.push(["Prompt eval", `${promptSpeed.toFixed(1)} tok/s`]);
+  }
+  if (Number.isFinite(stats.evalCount)) {
+    items.push(["Generated", `${formatNumber(stats.evalCount)} tok`]);
+  }
+  if (Number.isFinite(stats.evalCount) && Number.isFinite(stats.evalDuration) && stats.evalDuration > 0) {
+    const speed = stats.evalCount / (stats.evalDuration / 1_000_000_000);
+    items.push(["Speed", `${speed.toFixed(1)} tok/s`]);
+  }
+  if (Number.isFinite(stats.loadDuration)) {
+    items.push(["Load", formatSeconds(stats.loadDuration / 1_000_000)]);
+  }
+  if (Number.isFinite(stats.totalDuration)) {
+    items.push(["Total", formatSeconds(stats.totalDuration / 1_000_000)]);
+  }
+
+  const contextLength = modelContexts.get(stats.model);
+  if (Number.isFinite(stats.promptEvalCount) && Number.isFinite(stats.evalCount) && contextLength) {
+    const used = stats.promptEvalCount + stats.evalCount;
+    const usage = Math.min(100, (used / contextLength) * 100);
+    items.push(["Context", `~${formatNumber(used)} / ${formatNumber(contextLength)} tok (${usage.toFixed(1)}%)`]);
+  }
+
+  statsElement.replaceChildren();
+  for (const [label, value] of items) {
+    const item = document.createElement("span");
+    item.className = "stat-item";
+    const name = document.createElement("span");
+    name.className = "stat-label";
+    name.textContent = label;
+    const stat = document.createElement("span");
+    stat.textContent = value;
+    item.append(name, stat);
+    statsElement.append(item);
+  }
+  statsElement.hidden = items.length === 0;
+}
+
+function refreshDisplayedStats() {
+  const assistantElements = messagesElement.querySelectorAll(".message.assistant");
+  for (const element of assistantElements) {
+    const stats = messageStats.get(element);
+    if (stats) renderMessageStats(element, stats);
+  }
+}
+
+async function loadModelContext(model) {
+  if (!model) {
+    refreshContextIndicator();
+    return;
+  }
+  if (modelContexts.has(model)) {
+    refreshContextIndicator();
+    return;
+  }
+  try {
+    const data = await apiRequest(`/api/model-context?model=${encodeURIComponent(model)}`);
+    modelContexts.set(model, data.contextLength);
+    if (modelSelect.value === model) refreshContextIndicator();
+    refreshDisplayedStats();
+  } catch (error) {
+    modelContexts.set(model, null);
+    if (modelSelect.value === model) refreshContextIndicator();
+    console.error(`Could not load context capacity for ${model}:`, error);
+  }
 }
 
 function renderAssistantMarkdown(element, markdown) {
@@ -134,6 +283,7 @@ async function loadModels() {
     for (const model of data.models) modelSelect.add(new Option(model, model));
     modelSelect.disabled = false;
     setConnection(true, "Ollama connected");
+    void loadModelContext(modelSelect.value);
   } catch (error) {
     if (!currentUser) return;
     modelSelect.replaceChildren(new Option("Ollama unavailable", ""));
@@ -174,13 +324,21 @@ async function openConversation(id) {
   try {
     const data = await apiRequest(`/api/conversations/${encodeURIComponent(id)}`);
     conversationId = String(data.conversation.id);
-    messages = data.conversation.messages.map(({ role, content }) => ({ role, content }));
+    messages = data.conversation.messages.map(({ role, content, stats }) => ({ role, content, stats }));
+    currentContextStats = [...messages].reverse().find((message) => message.role === "assistant" && message.stats)?.stats || null;
     messagesElement.replaceChildren();
-    for (const message of messages) addMessage(message.role, message.content);
+    for (const message of messages) addMessage(message.role, message.content, message.stats);
     welcome.hidden = messages.length > 0;
     if (data.conversation.model) {
       const option = [...modelSelect.options].find((item) => item.value === data.conversation.model);
-      if (option) modelSelect.value = option.value;
+      if (option) {
+        modelSelect.value = option.value;
+        void loadModelContext(option.value);
+      }
+    }
+    refreshContextIndicator();
+    for (const model of new Set(messages.map(({ stats }) => stats?.model).filter(Boolean))) {
+      void loadModelContext(model);
     }
     await loadConversations();
     document.querySelector("#sidebar").classList.remove("is-open");
@@ -208,7 +366,7 @@ async function loadUsers() {
   }
 }
 
-async function handleStreamLine(line, assistantMessage, assistantText) {
+async function handleStreamLine(line, assistantMessage, assistantText, messageElement) {
   if (!line.trim()) return;
   let data;
   try {
@@ -217,6 +375,12 @@ async function handleStreamLine(line, assistantMessage, assistantText) {
     throw new Error("Ollama sent an invalid response.");
   }
   if (data.error) throw new Error(data.error);
+  if (data.snappy_stats && typeof data.snappy_stats === "object") {
+    assistantMessage.stats = data.snappy_stats;
+    currentContextStats = assistantMessage.stats;
+    refreshContextIndicator();
+    renderMessageStats(messageElement, assistantMessage.stats);
+  }
   if (typeof data.message?.content === "string") {
     assistantMessage.content += data.message.content;
     renderAssistantMarkdown(assistantText, assistantMessage.content);
@@ -235,6 +399,7 @@ async function sendMessage(content) {
 
   const assistantMessage = { role: "assistant", content: "" };
   const assistantText = addMessage("assistant");
+  const assistantElement = assistantText.closest(".message");
   messages.push(assistantMessage);
   const controller = new AbortController();
   activeController = controller;
@@ -270,16 +435,16 @@ async function sendMessage(content) {
       pending += decoder.decode(value, { stream: !done });
       const lines = pending.split("\n");
       pending = lines.pop();
-      for (const line of lines) await handleStreamLine(line, assistantMessage, assistantText);
+      for (const line of lines) await handleStreamLine(line, assistantMessage, assistantText, assistantElement);
       if (done) break;
     }
-    await handleStreamLine(pending, assistantMessage, assistantText);
+    await handleStreamLine(pending, assistantMessage, assistantText, assistantElement);
   } catch (error) {
     if (error.name === "AbortError") {
       renderAssistantMarkdown(assistantText, assistantMessage.content);
     } else {
       assistantText.textContent = error.message;
-      assistantText.parentElement.classList.add("error");
+      assistantText.closest(".message").classList.add("error");
       const index = messages.indexOf(assistantMessage);
       if (index !== -1) messages.splice(index, 1);
       void loadConversations();
@@ -341,7 +506,11 @@ messageInput.addEventListener("keydown", (event) => {
   }
 });
 
-modelSelect.addEventListener("change", updateSendButton);
+modelSelect.addEventListener("change", () => {
+  updateSendButton();
+  refreshContextIndicator();
+  void loadModelContext(modelSelect.value);
+});
 
 document.querySelectorAll("[data-prompt]").forEach((button) => {
   button.addEventListener("click", () => {
@@ -355,7 +524,9 @@ newChatButton.addEventListener("click", () => {
   cancelGeneration();
   conversationId = undefined;
   messages = [];
+  currentContextStats = null;
   messagesElement.replaceChildren();
+  refreshContextIndicator();
   welcome.hidden = false;
   messageInput.value = "";
   messageInput.style.height = "auto";

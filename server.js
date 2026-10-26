@@ -163,9 +163,45 @@ async function getOllamaModels(response) {
   });
 }
 
+async function getModelContext(response, model) {
+  if (!model || model.length > 200) {
+    sendJson(response, 400, { error: "Choose a valid model." });
+    return;
+  }
+
+  let upstream;
+  try {
+    upstream = await fetch(`${ollamaBaseUrl}/api/show`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model }),
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch (error) {
+    sendJson(response, 502, { error: `Could not reach Ollama: ${error.message}` });
+    return;
+  }
+  if (!upstream.ok) {
+    sendJson(response, 502, { error: `Ollama returned HTTP ${upstream.status} for model details.` });
+    return;
+  }
+
+  let details;
+  try {
+    details = await upstream.json();
+  } catch {
+    sendJson(response, 502, { error: "Ollama returned invalid model details." });
+    return;
+  }
+  const contextLength = Object.entries(details.model_info || {})
+    .find(([key, value]) => key.endsWith(".context_length") && Number.isSafeInteger(value) && value > 0)?.[1] || null;
+  sendJson(response, 200, { contextLength });
+}
+
 async function streamChat(request, response, user, body) {
   const { model, message, conversationId } = validateChatRequest(body);
   const turn = await database.startUserTurn(user.id, conversationId, model, message);
+  const requestStartedAt = process.hrtime.bigint();
   const abortController = new AbortController();
   const abortWhenDisconnected = () => {
     if (!response.writableEnded) abortController.abort();
@@ -207,15 +243,40 @@ async function streamChat(request, response, user, body) {
 
   let assistantContent = "";
   let streamError = false;
-  let complete = false;
+  let firstTokenMs = null;
   let pending = "";
   const decoder = new TextDecoder();
-  const consumeLine = (line) => {
-    if (!line.trim()) return;
+  const consumeLine = async (line, delimiter) => {
+    if (!line.trim()) {
+      if (delimiter && !response.write(delimiter)) await new Promise((resolve) => response.once("drain", resolve));
+      return;
+    }
     const data = JSON.parse(line);
-    if (typeof data.message?.content === "string") assistantContent += data.message.content;
+    if (typeof data.message?.content === "string" && data.message.content.length > 0) {
+      if (firstTokenMs === null) {
+        firstTokenMs = Number(process.hrtime.bigint() - requestStartedAt) / 1_000_000;
+      }
+      assistantContent += data.message.content;
+    }
     if (data.error) streamError = true;
-    if (data.done === true) complete = true;
+    if (data.done === true) {
+      const stats = {
+        model,
+        firstTokenMs,
+        totalDuration: Number.isFinite(data.total_duration) ? data.total_duration : null,
+        loadDuration: Number.isFinite(data.load_duration) ? data.load_duration : null,
+        promptEvalCount: Number.isFinite(data.prompt_eval_count) ? data.prompt_eval_count : null,
+        promptEvalDuration: Number.isFinite(data.prompt_eval_duration) ? data.prompt_eval_duration : null,
+        evalCount: Number.isFinite(data.eval_count) ? data.eval_count : null,
+        evalDuration: Number.isFinite(data.eval_duration) ? data.eval_duration : null,
+      };
+      data.snappy_stats = stats;
+      if (!streamError && assistantContent.length > 0 && !abortController.signal.aborted) {
+        await database.saveAssistantMessage(user.id, turn.id, assistantContent, stats);
+      }
+    }
+    const output = `${JSON.stringify(data)}${delimiter}`;
+    if (!response.write(output)) await new Promise((resolve) => response.once("drain", resolve));
   };
 
   try {
@@ -227,16 +288,10 @@ async function streamChat(request, response, user, body) {
       pending += decoder.decode(chunk, { stream: true });
       const lines = pending.split("\n");
       pending = lines.pop();
-      for (const line of lines) consumeLine(line);
-      if (!response.write(chunk)) {
-        await new Promise((resolve) => response.once("drain", resolve));
-      }
+      for (const line of lines) await consumeLine(line, "\n");
     }
     pending += decoder.decode();
-    if (pending.trim()) consumeLine(pending);
-    if (complete && !streamError && assistantContent.length > 0 && !abortController.signal.aborted) {
-      await database.saveAssistantMessage(user.id, turn.id, assistantContent);
-    }
+    if (pending.trim()) await consumeLine(pending, "");
     response.end();
   } catch (error) {
     if (!abortController.signal.aborted) {
@@ -284,6 +339,11 @@ async function handleApi(request, response, url) {
 
   if (request.method === "GET" && url.pathname === "/api/models") {
     await getOllamaModels(response);
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/model-context") {
+    await getModelContext(response, url.searchParams.get("model"));
     return;
   }
 

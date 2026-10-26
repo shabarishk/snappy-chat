@@ -67,6 +67,19 @@
             <select id="model-select" aria-label="Choose a model" disabled>
               <option>Loading models…</option>
             </select>
+            <div class="context-widget" id="context-widget">
+              <button class="context-trigger" id="context-trigger" type="button" aria-describedby="context-tooltip">
+                <span class="context-donut" id="context-donut" aria-hidden="true">
+                  <span class="context-donut-value" id="context-percent">—</span>
+                </span>
+                <span class="context-label">Context</span>
+              </button>
+              <div class="context-tooltip" id="context-tooltip" role="tooltip">
+                <span class="context-tooltip-title">Context window</span>
+                <span class="context-tooltip-usage" id="context-tooltip-usage">Usage appears after a reply</span>
+                <span class="context-tooltip-note">Estimated from the latest prompt and response.</span>
+              </div>
+            </div>
           </div>
           <span class="local-badge"><span aria-hidden="true">●</span> LOCAL</span>
         </header>

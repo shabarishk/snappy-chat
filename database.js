@@ -112,8 +112,10 @@ function createDatabase(config) {
         conversation_id BIGINT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
         role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
         content TEXT NOT NULL,
+        stats JSONB,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
+      ALTER TABLE messages ADD COLUMN IF NOT EXISTS stats JSONB;
       CREATE INDEX IF NOT EXISTS messages_conversation_id_idx ON messages (conversation_id, id);
     `);
 
@@ -231,7 +233,7 @@ function createDatabase(config) {
     );
     if (!result.rows[0]) throw createError(404, "Conversation not found.");
     const messages = await pool.query(
-      "SELECT role, content, created_at FROM messages WHERE conversation_id = $1 ORDER BY id",
+      "SELECT role, content, stats, created_at FROM messages WHERE conversation_id = $1 ORDER BY id",
       [conversationId],
     );
     return { ...result.rows[0], messages: messages.rows };
@@ -281,12 +283,12 @@ function createDatabase(config) {
     }
   }
 
-  async function saveAssistantMessage(userId, conversationId, content) {
+  async function saveAssistantMessage(userId, conversationId, content, stats) {
     await pool.query(
-      `INSERT INTO messages (conversation_id, role, content)
-       SELECT id, 'assistant', $3 FROM conversations
+      `INSERT INTO messages (conversation_id, role, content, stats)
+       SELECT id, 'assistant', $3, $4::jsonb FROM conversations
        WHERE id = $1 AND user_id = $2`,
-      [conversationId, userId, content],
+      [conversationId, userId, content, JSON.stringify(stats)],
     );
     await pool.query(
       "UPDATE conversations SET updated_at = NOW() WHERE id = $1 AND user_id = $2",

@@ -37,6 +37,11 @@ preserve user accounts and conversation history.
 
 Assistant replies render GitHub-flavored Markdown, including headings, lists,
 links, tables, and code blocks. Rendered HTML is sanitized in the browser.
+Completed replies show Ollama's prompt/output token counts, prompt evaluation
+speed, generation speed, model load time, total time, and time to first token.
+The model selector also shows the model's context capacity from Ollama model
+metadata; per-reply context usage is an estimate based on prompt and output
+token counts, and may differ from the active runtime context setting.
 
 ## Unraid container settings
 
