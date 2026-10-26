@@ -88,7 +88,7 @@ function updateSendButton() {
   sendButton.disabled = !isGenerating && (!modelSelect.value || !messageInput.value.trim());
 }
 
-function addMessage(role, content = "", stats = null) {
+function addMessage(role, content = "", stats = null, isPending = false) {
   const message = document.createElement("article");
   message.className = `message ${role}`;
 
@@ -104,6 +104,23 @@ function addMessage(role, content = "", stats = null) {
   const body = document.createElement("div");
   body.className = "message-body";
   body.append(text);
+  if (role === "assistant" && isPending) {
+    const pending = document.createElement("div");
+    pending.className = "thinking-indicator";
+    pending.setAttribute("role", "status");
+    pending.setAttribute("aria-label", "Waiting for the model's first response");
+    const label = document.createElement("span");
+    label.className = "thinking-label";
+    label.textContent = "Thinking";
+    const dots = document.createElement("span");
+    dots.className = "thinking-dots";
+    dots.setAttribute("aria-hidden", "true");
+    for (let index = 0; index < 3; index++) {
+      dots.append(document.createElement("span"));
+    }
+    pending.append(label, dots);
+    body.append(pending);
+  }
   message.append(avatar, body);
   if (role === "assistant" && stats) renderMessageStats(message, stats);
   messagesElement.append(message);
@@ -382,6 +399,9 @@ async function handleStreamLine(line, assistantMessage, assistantText, messageEl
     renderMessageStats(messageElement, assistantMessage.stats);
   }
   if (typeof data.message?.content === "string") {
+    if (data.message.content.length > 0) {
+      messageElement.querySelector(".thinking-indicator")?.remove();
+    }
     assistantMessage.content += data.message.content;
     renderAssistantMarkdown(assistantText, assistantMessage.content);
     assistantText.parentElement.scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -398,7 +418,7 @@ async function sendMessage(content) {
   messageInput.style.height = "auto";
 
   const assistantMessage = { role: "assistant", content: "" };
-  const assistantText = addMessage("assistant");
+  const assistantText = addMessage("assistant", "", null, true);
   const assistantElement = assistantText.closest(".message");
   messages.push(assistantMessage);
   const controller = new AbortController();
@@ -439,10 +459,13 @@ async function sendMessage(content) {
       if (done) break;
     }
     await handleStreamLine(pending, assistantMessage, assistantText, assistantElement);
+    assistantElement.querySelector(".thinking-indicator")?.remove();
   } catch (error) {
     if (error.name === "AbortError") {
+      assistantElement.querySelector(".thinking-indicator")?.remove();
       renderAssistantMarkdown(assistantText, assistantMessage.content);
     } else {
+      assistantElement.querySelector(".thinking-indicator")?.remove();
       assistantText.textContent = error.message;
       assistantText.closest(".message").classList.add("error");
       const index = messages.indexOf(assistantMessage);
